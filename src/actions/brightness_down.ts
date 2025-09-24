@@ -1,6 +1,6 @@
 import streamDeck, { action, DidReceiveSettingsEvent, JsonObject, JsonValue, KeyDownEvent, SingletonAction, SendToPluginEvent, WillAppearEvent } from "@elgato/streamdeck";
 import { flashLight, getLightBySerialNumber, sendLightsToUI } from "../global";
-import { setBrightnessPercentage, getBrightnessInLumen, getMaximumBrightnessInLumenForDevice } from "litra";
+import { setBrightnessPercentage, getBrightnessInLumen, getMaximumBrightnessInLumenForDevice,  getMinimumBrightnessInLumenForDevice, setBrightnessInLumen } from "litra";
 import { ActionSettings } from "../settings";
 
 @action({ UUID: "com.eladavron.litra-glow-commander.brightness-down" })
@@ -25,13 +25,14 @@ export class BrightnessDownAction extends SingletonAction {
                 streamDeck.logger.error("Light not found", selectedLight);
                 continue;
             }
-            const currentBrightness = getBrightnessInLumen(light);
+            const currentBrightness = getBrightnessInLumen(light); 
             const maxBrightness = getMaximumBrightnessInLumenForDevice(light);
-            const currentPercentage = Math.round(((currentBrightness / maxBrightness) * 100) / 10) * 10;
-            const newPercentage = Math.max(currentPercentage - increments, 0);
-            const newValue = (maxBrightness / 100) * newPercentage;
+            const minBrightness = getMinimumBrightnessInLumenForDevice(light);
+            const currentPercentage = Math.round((currentBrightness - minBrightness) / (maxBrightness - minBrightness) * 100);
+            const newPercentage = Math.max(currentPercentage - increments, 0); // Used for logging only
+            const newValue = Math.round(minBrightness + ((maxBrightness - minBrightness) * (newPercentage / 100)));
             streamDeck.logger.debug(`Setting brightness of light ${selectedLight} from ${currentPercentage}% (${currentBrightness}lm) to ${newPercentage}% (${newValue}lm)`);
-            setBrightnessPercentage(light, newPercentage);
+            setBrightnessInLumen(light, newValue);
         }
     }
 

@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.0.0.1
+
+### Fixed
+
+- Fixed relative temperature buttons not working for low increments due to a rounding error (#2)
+
+### Changed
+
+- Minimum increment is now 5% since 0% is meaningless.
+
 ## v1.0.0.0
 
 🥳 Bumped to Version 1.0.0.0 now that the plugin has all of its originally planned features!
