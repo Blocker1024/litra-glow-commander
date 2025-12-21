@@ -12,7 +12,7 @@ async function rampBrightness(light: any, targetPercentage: number, duration: nu
     const minBrightness = light["Min"];
     const maxBrightness = light['Max'];
     const currentBrightness = light['Brightness'];
-    const targetBrightness = Math.ceil((targetPercentage - 1) / 99 * (maxBrightness - minBrightness) + minBrightness);
+    const targetBrightness = Math.ceil((targetPercentage) / 100 * (maxBrightness - minBrightness) + minBrightness);
     const deltaBrightness = targetBrightness - currentBrightness;
     streamDeck.logger.debug(`Current brightness: ${currentBrightness}lm`);
     /*targetbrightness same as percentageWithinRange function from litra package
@@ -114,4 +114,5 @@ Raming in lumens using same calculation as litra package
 Added default values for settings to match intended defaults. Previously null if not set in Stream Deck UI
 Modified error correction for missing light for increased readability
 Added command to power on lights that are off when brightness is set
+
 Switched current brightness calculation to match litra package*/
