@@ -19,6 +19,12 @@
         <sdpi-checkbox setting="showOnIcon" label="Show Value on Icon">
         </sdpi-checkbox>
     </sdpi-item>
+    <sdpi-item label="Ramp Duration">
+        <sdpi-range min="0" max="60" step="1" default="0" setting="duration" showlabels>
+            <span slot="min">0</span>
+            <span slot="max">60</span>
+        </sdpi-range>
+    </sdpi-item>
     <sdpi-item id="select-lights" label="Select Lights">
         <sdpi-checkbox-list setting="selectedLights" datasource="getLights">
         </sdpi-checkbox-list>
