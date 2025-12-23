@@ -12,6 +12,7 @@
 			"Controllers": [
 				"Keypad"
 			],
+			"DisableAutomaticStates": true,
 			"States": [
 				{
 					"Image": "imgs/actions/litra_glow_off",
@@ -92,7 +93,7 @@
 			"UUID": "com.eladavron.litra-glow-commander.set-brightness",
 			"Icon": "imgs/actions/brightness_outline",
 			"Tooltip": "Sets the brightness of the selected Litra Glow light(s) to a specific value.",
-			"PropertyInspectorPath": "ui/set-value.html",
+			"PropertyInspectorPath": "ui/set-brightness.html",
 			"Controllers": [
 				"Keypad"
 			],
@@ -108,7 +109,7 @@
 			"UUID": "com.eladavron.litra-glow-commander.set-temperature",
 			"Icon": "imgs/actions/temperature_outline",
 			"Tooltip": "Sets the temperature of the selected Litra Glow light(s) to a specific value.",
-			"PropertyInspectorPath": "ui/set-value.html",
+			"PropertyInspectorPath": "ui/set-colortemp.html",
 			"Controllers": [
 				"Keypad"
 			],
