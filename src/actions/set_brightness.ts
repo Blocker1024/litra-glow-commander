@@ -1,6 +1,6 @@
 import streamDeck, { action, DidReceiveSettingsEvent, JsonObject, JsonValue, KeyDownEvent, SingletonAction, SendToPluginEvent, WillAppearEvent } from "@elgato/streamdeck";
 import { flashLight, getLightBySerialNumber, sendLightsToUI } from "../global";
-import { getBrightnessInLumen, getMinimumBrightnessInLumenForDevice, getMaximumBrightnessInLumenForDevice, setBrightnessPercentage, isOn, turnOn, setBrightnessInLumen }from "litra";
+import { getBrightnessInLumen, getMinimumBrightnessInLumenForDevice, getMaximumBrightnessInLumenForDevice, setBrightnessPercentage, isOn, turnOn, setBrightnessInLumen, Device }from "litra";
 import { ActionSettings } from "../settings";
 
 //Delay for brightness ramping: time received in milliseconds
@@ -8,30 +8,30 @@ function sleep(ms: number): Promise<void> {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
 
-async function rampBrightness(light: any, targetPercentage: number, duration: number) {
-    const minBrightness = light["Min"];
-    const maxBrightness = light['Max'];
-    const currentBrightness = light['Brightness'];
+async function rampBrightness(light: Device, targetPercentage: number, duration: number) {
+    const minBrightness = getMinimumBrightnessInLumenForDevice(light);
+    const maxBrightness = getMaximumBrightnessInLumenForDevice(light);
+    const currentBrightness = getBrightnessInLumen(light);
     const targetBrightness = Math.ceil((targetPercentage) / 100 * (maxBrightness - minBrightness) + minBrightness);
     const deltaBrightness = targetBrightness - currentBrightness;
     streamDeck.logger.debug(`Current brightness: ${currentBrightness}lm`);
-    /*targetbrightness same as percentageWithinRange function from litra package
+    /*targetbrightness same as percentageWithinRange function from litra 4.5.1
     deltaBrightness used to determine step count and time per step*/
 
     //Start ramping loop
     if (deltaBrightness > 0) {
-        for (let i = currentBrightness + 1; i <= targetBrightness; i++){
+        for (let i = currentBrightness + 1; i <= targetBrightness; i++) {
             setBrightnessInLumen(light, i);
             await sleep(Math.round(duration/deltaBrightness * 1000));
         }
-        streamDeck.logger.info(`Brightness ramped up to ${targetPercentage}%`);
+        streamDeck.logger.debug(`Brightness ramped up to ${targetPercentage}%`);
     } else if (deltaBrightness < 0) {
-        for (let i = currentBrightness - 1; i >= targetBrightness; i--){
+        for (let i = currentBrightness - 1; i >= targetBrightness; i--) {
             setBrightnessInLumen(light, i);
             await sleep(Math.round(duration/deltaBrightness * -1000)); //Intentionally negative to get positive time
         }
-        streamDeck.logger.info(`Brightness ramped down to ${targetPercentage}%`);
-    } else streamDeck.logger.info(`Brightness is already at ${targetPercentage}%`);
+        streamDeck.logger.debug(`Brightness ramped down to ${targetPercentage}%`);
+    } else streamDeck.logger.debug(`Brightness is already at ${targetPercentage}%`);
     //End ramping loop
 }
 
@@ -54,19 +54,14 @@ export class SetBrightness extends SingletonAction {
         const duration = settings.duration as number ?? 0;
         if (duration != 0) {
             for (const selectedLight of selectedLights) {
-                const light: any= getLightBySerialNumber(selectedLight);
-                if(light){
+                const light= getLightBySerialNumber(selectedLight);
+                if(light) {
                     if (!isOn(light)) {
                         setBrightnessPercentage(light, 1);
                         turnOn(light);
                     }
-                    //Extends light device to add Min, Max, and Brightness properties for ramping function
-                    light['Min'] = getMinimumBrightnessInLumenForDevice(light);
-                    light['Max'] = getMaximumBrightnessInLumenForDevice(light); 
-                    light['Brightness'] = getBrightnessInLumen(light); 
                     rampBrightness(light, percentage, duration);
-                }
-                else streamDeck.logger.error("Light not found", selectedLight);
+                } else streamDeck.logger.error("Light not found", selectedLight);
             }
         }
         else {
@@ -78,15 +73,13 @@ export class SetBrightness extends SingletonAction {
                     if (!isOn(light)) {
                         turnOn(light);
                     }
-                    /*const minBrightness = getMinimumBrightnessInLumenForDevice(light);
+                    const minBrightness = getMinimumBrightnessInLumenForDevice(light);
                     const maxBrightness = getMaximumBrightnessInLumenForDevice(light);
-                    const currentPercentage = Math.round((currentBrightness - minBrightness) / (maxBrightness - minBrightness) * 99 + 1);
+                    const currentPercentage = Math.round((currentBrightness - minBrightness) / (maxBrightness - minBrightness) * 100);
                     const newBrightness = getBrightnessInLumen(light);
-                    streamDeck.logger.debug(`Setting brightness of light ${selectedLight} from ${currentPercentage}% (${currentBrightness}lm) to ${percentage}% (${newBrightness}lm)`);*/
-                }
-                else streamDeck.logger.error("Light not found", selectedLight);
+                    streamDeck.logger.debug(`Setting brightness of light ${selectedLight} from ${currentPercentage}% (${currentBrightness}lm) to ${percentage}% (${newBrightness}lm)`);
+                } else streamDeck.logger.error("Light not found", selectedLight);
             }
-                
         }
     }
         
@@ -110,9 +103,8 @@ export class SetBrightness extends SingletonAction {
 
 /*Brightness Ramp and relevant changes based on version 1.0.0.1
 Added brighteness ramp with duration setting 0-60 seconds as slider in UI
-Raming in lumens using same calculation as litra package
+Ramping in lumens using same calculation as litra package v4.5.1
 Added default values for settings to match intended defaults. Previously null if not set in Stream Deck UI
 Modified error correction for missing light for increased readability
 Added command to power on lights that are off when brightness is set
-
 Switched current brightness calculation to match litra package*/
